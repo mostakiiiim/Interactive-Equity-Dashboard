@@ -30,6 +30,7 @@ def load_and_engineer_data():
     #Engineer new features: 50-day moving Average and Daily Return %
 
     df['50_MA'] = df.groupby('Ticker')['close'].transform(lambda x: x.rolling(window = 50).mean())
+    df['200_MA']= df.groupby('Ticker')['close'].transform(lambda x:x.rolling(window =200).mean())
     df['Daily_Return_%'] = df.groupby('Ticker')['close'].pct_change() *100
 
     return df
@@ -69,11 +70,12 @@ else:
     for i,ticker in enumerate(selected_tickers):
         ticker_data = filtered_df[filtered_df['Ticker']== ticker]
         latest_close = ticker_data['close'].iloc[-1]
+        all_time_high = ticker_data['high'].max()
         latest_return = ticker_data['Daily_Return_%'].iloc[-1]
 
         with cols[i]:
             st.metric(label =f"{ticker} Latest CLose", value = f"${latest_close: .2f}", delta= f"{latest_return:.2f}%")
-
+            st.metric(label =f"{ticker} All time high", value = f"${all_time_high: .2f}")
     st.divider()
 #Plotly Charts
 
@@ -81,7 +83,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Historical Closing Prices")
-    fig_price = px.line(filtered_df, x = 'date', y='close', color ='Ticker', title = "Price over Time")
+    fig_price = px.line(filtered_df, x = 'date', y=['close', '50_MA'], color ='Ticker', title = "Price over Time")
     st.plotly_chart(fig_price, use_container_width= True)
 with col2:
     st.subheader("Trading Volume")
